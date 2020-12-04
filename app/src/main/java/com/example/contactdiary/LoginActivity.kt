@@ -17,24 +17,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         findViewById<Button>(R.id.loginBtn).setOnClickListener {
-            val email = findViewById<EditText>(R.id.loginEmailTxt).text.toString()
-            val password = findViewById<EditText>(R.id.loginPasswordTxt).text.toString()
-
-            //Firebase Authentication
-            FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if(!task.isSuccessful) {
-                        return@addOnCompleteListener
-                    }else{
-                        // else if successful
-                        Log.d("Login", "Successfully logged in.")
-                        finish()
-                    }
-                }
-                .addOnFailureListener { task ->
-                    Log.d("Login", "Login Failed: ${task.message}")
-                    Toast.makeText(applicationContext, "Login Failed.", Toast.LENGTH_LONG).show()
-                }
+            performLogin()
         }
 
         findViewById<TextView>(R.id.signupTxt).setOnClickListener {
@@ -55,7 +38,9 @@ class LoginActivity : AppCompatActivity() {
                 }else{
                     // else if successful
                     Log.d("Login", "Successfully logged in.")
-                    finish()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
                 }
             }
             .addOnFailureListener { task ->
