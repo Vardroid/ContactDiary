@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "396863471457",
+    "firebase_url": "https://contact-diary-bd1c9-default-rtdb.firebaseio.com",
+    "project_id": "contact-diary-bd1c9",
+    "storage_bucket": "contact-diary-bd1c9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396863471457:android:6e82663acfaa9ef90f8f20",
+        "android_client_info": {
+          "package_name": "com.example.contactdiary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "396863471457-jqmpskfmacrsnb4hqrbat8bbumornac4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZK5RnMKOPk7yihjGt71OoDDuDkMTypI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "396863471457-jqmpskfmacrsnb4hqrbat8bbumornac4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
