@@ -18,6 +18,7 @@ import com.google.firebase.database.ValueEventListener
 import java.util.*
 
 class AddEntryActivity : AppCompatActivity() {
+    var dateFormat = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_entry)
@@ -38,14 +39,16 @@ class AddEntryActivity : AppCompatActivity() {
         saveEntryBtn.setOnClickListener { saveEntryToFirebaseDatabase() }
 
         entryDateTxt.setOnClickListener{
-            val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-                entryDateTxt.setText(""+ (month+1) + " - " + dayOfMonth + " - " + year)
+            val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+                val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+                dateFormat = "" + (month+1) + " - " + dayOfMonth + " - " + year
+                entryDateTxt.setText(""+ months[month] + " " + dayOfMonth + ", " + year)
             }, year, month, day)
             dpd.show()
         }
 
         entryTimeTxt.setOnClickListener {
-            val tpd = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { view, hourOfDay, minute ->
+            val tpd = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
                 var additional = "AM"
                 var newHour = hourOfDay
                 if(hourOfDay > 12){
@@ -63,7 +66,7 @@ class AddEntryActivity : AppCompatActivity() {
     }
 
     private fun saveEntryToFirebaseDatabase(){
-        val entryDateTxt = findViewById<TextView>(R.id.entryDateTxt).text.toString()
+        val entryDateTxt = dateFormat
         val entryTimeTxt = findViewById<TextView>(R.id.entryTimePickerTxt).text.toString()
         val entryPlaceTxt = findViewById<TextView>(R.id.addEntryPlaceTxt).text.toString()
         val entryDescTxt = findViewById<TextView>(R.id.entryDescTxt).text.toString()
@@ -108,7 +111,6 @@ class AddEntryActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Log.d("AddEntry", "Successfully added entry to database.")
                 Toast.makeText(applicationContext, "Successfully added entry to database.", Toast.LENGTH_LONG).show()
-                finish()
             }
             .addOnFailureListener { task ->
                 Log.d("AddEntry", "Failed to add entry to database: ${task.message}")

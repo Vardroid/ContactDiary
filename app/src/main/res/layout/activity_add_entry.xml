@@ -26,7 +26,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
-        android:text="August 14, 2020"
+        android:text="Pick Date"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -38,7 +38,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
-        android:text="08:14"
+        android:text="Pick Time"
         android:textSize="18sp"
         app:layout_constraintStart_toEndOf="@+id/entryDateTxt"
         app:layout_constraintTop_toTopOf="parent" />

@@ -6,9 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.BaseAdapter
-import android.widget.ListView
-import android.widget.TextView
+import android.widget.*
 import com.example.contactdiary.models.Day
 import com.example.contactdiary.models.Entry
 import com.google.firebase.auth.FirebaseAuth
@@ -19,9 +17,11 @@ import com.google.firebase.database.ValueEventListener
 
 class MainActivity : AppCompatActivity() {
     lateinit var days: ArrayList<Day>
-    lateinit var mainList: ListView
-    lateinit var entryList: ListView
+    lateinit var mainList: ExpandableListView
     lateinit var entries: ArrayList<Day>
+
+    lateinit var entriesComp: MutableList<Entry>
+    lateinit var entriesCompComp: MutableList<MutableList<Entry>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
 
         entries = ArrayList()
         days = ArrayList()
+        entriesComp = ArrayList()
+        entriesCompComp = ArrayList()
         fetchDays()
 
         val fabAdd: View = findViewById(R.id.mainAddBtn)
@@ -40,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         val fabCalendar: View = findViewById(R.id.mainCalendarBtn)
         fabCalendar.setOnClickListener {
-            //startActivity(Intent(this, CalendarActivity::class.java))
+            startActivity(Intent(this, CalendarActivity::class.java))
         }
 
         val fabMe: View = findViewById(R.id.mainMeBtn)
@@ -49,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //get the days data from the users inside the firebase
+    //get the days data with their child entries from the users inside the firebase
     private fun fetchDays() {
         val uid = FirebaseAuth.getInstance().uid ?: ""
         Log.d("Test", "$uid")
@@ -57,18 +59,27 @@ class MainActivity : AppCompatActivity() {
         userRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 days.clear()
-
-                snapshot.children.forEach {
-                    if(it.hasChildren()){
-                        Log.d("Test", "Successfully added day to database.")
+                snapshot.children.forEach { it ->
+                    if(it.hasChildren()){ //if it is the day path
                         val date = it.getValue(Day::class.java)
                         days.add(date!!)
+
+                        //go to child to check for entries
+                        entriesComp.clear()
+                        it.children.forEach{ twoit ->
+                            if(twoit.hasChildren()){ //if it is an entry path
+                                val entry = twoit.getValue(Entry::class.java)
+                                entriesComp.add(entry!!)
+                            }
+                        }
+                        Log.d("Test", "${entriesComp.size}")
+                        entriesCompComp.add(entriesComp.toMutableList())
                     }
                 }
-                val adapter = MainListAdapter(applicationContext, days)
-
+                val adapter = MainExpandableListViewAdapter(applicationContext, days, entriesCompComp.toMutableList())
                 mainList = findViewById(R.id.mainList)
-                mainList.adapter = adapter
+                mainList.setAdapter(adapter)
+
                 if(days.isNotEmpty()){
                     findViewById<TextView>(R.id.mainListPlaceholderTxt).visibility = View.INVISIBLE
                 }
@@ -77,8 +88,6 @@ class MainActivity : AppCompatActivity() {
                 TODO("Not yet implemented")
             }
         })
-
-
     }
 
     //verify if user is logged in
@@ -115,100 +124,59 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-    class MainListAdapter(context: Context, items: ArrayList<Day>): BaseAdapter(){
+    //adapter for the expandablelistview in the MainActivity
+    class MainExpandableListViewAdapter (context: Context, items: ArrayList<Day>, entryEntries: MutableList<MutableList<Entry>>) : BaseExpandableListAdapter(){
         private val mContext: Context = context
         private val mItems: MutableList<Day> = items
+        private val mEntryEntries: MutableList<MutableList<Entry>> = entryEntries
+        lateinit var mExpandableListView: ExpandableListView
 
-        override fun getCount(): Int {
+        override fun getGroupCount(): Int {
             return mItems.size
         }
 
-        override fun getItem(position: Int): Any {
-            return position
+        override fun getChildrenCount(groupPosition: Int): Int {
+            return mEntryEntries[groupPosition].size
         }
 
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
+        override fun getGroup(groupPosition: Int): Any {
+            return mItems[groupPosition]
         }
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        override fun getChild(groupPosition: Int, childPosition: Int): Any {
+            return mEntryEntries[groupPosition][childPosition]
+        }
+
+        override fun getGroupId(groupPosition: Int): Long {
+            return groupPosition.toLong()
+        }
+
+        override fun getChildId(groupPosition: Int, childPosition: Int): Long {
+            return childPosition.toLong()
+        }
+
+        override fun hasStableIds(): Boolean {
+            return true
+        }
+
+        override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
+            mExpandableListView = parent as ExpandableListView
+            mExpandableListView.expandGroup(groupPosition)
             val layoutInflater = LayoutInflater.from(mContext)
             val itemView = layoutInflater.inflate(R.layout.main_list_item, parent, false)
 
             val date = itemView.findViewById<TextView>(R.id.mainListDateTxt)
-            date.text = mItems[position].date
+            val dates = mItems[groupPosition].date.split(" - ").toTypedArray()
+            val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+            val m = months[dates[0].toInt()-1]
 
-            val entryList = itemView.findViewById<ListView>(R.id.entryList)
+            date.text = "$m ${dates[1]}, ${dates[2]}"
+            //Log.d("Test", "entryEntries size: ${entryEntries[groupPosition].size} $groupPosition")
 
-            var entries:ArrayList<Entry> = ArrayList()
-
-            //go through the entries of each day
-            val uid = FirebaseAuth.getInstance().uid ?: ""
-            val userRef = FirebaseDatabase.getInstance().getReference("users/$uid/${mItems[position].date}")
-            userRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    entries.clear()
-                    snapshot.children.forEach {
-                        if(it.hasChildren()){
-                            Log.d("Test", "child found")
-                            val entry = it.getValue(Entry::class.java)
-                            entries.add(entry!!)
-                        }
-                    }
-                    val adapter = EntryListAdapter(mContext, entries)
-                    entryList.adapter = adapter
-                }
-                override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
-                }
-            })
             return itemView
         }
 
-        //get the entries of a certain day of the users inside the firebase
-//        private fun fetchEntries(date: Day, entryList: ListView){
-//            Log.d("Test", "fetchentries")
-//            var entries:ArrayList<Entry> = ArrayList()
-//            val uid = FirebaseAuth.getInstance().uid ?: ""
-//            val userRef = FirebaseDatabase.getInstance().getReference("users/$uid/${date.date}")
-//            userRef.addValueEventListener(object : ValueEventListener {
-//                override fun onDataChange(snapshot: DataSnapshot) {
-//                    entries.clear()
-//                    snapshot.children.forEach {
-//                        if(it.hasChildren()){
-//                            Log.d("Test", "child found")
-//                            val entry = it.getValue(Entry::class.java)
-//                            entries.add(entry!!)
-//                        }
-//                    }
-//                    val adapter = EntryListAdapter(mContext, entries)
-//
-//                    entryList.adapter = adapter
-//                }
-//                override fun onCancelled(error: DatabaseError) {
-//                    TODO("Not yet implemented")
-//                }
-//            })
-//        }
-    }
-
-    class EntryListAdapter(context: Context, items: ArrayList<Entry>): BaseAdapter(){
-        private val mContext: Context = context
-        private val mItems: MutableList<Entry> = items
-
-        override fun getCount(): Int {
-            return mItems.size
-        }
-
-        override fun getItem(position: Int): Any {
-            return position
-        }
-
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
             val layoutInflater = LayoutInflater.from(mContext)
             val itemView = layoutInflater.inflate(R.layout.entry_list_item, parent, false)
 
@@ -217,14 +185,17 @@ class MainActivity : AppCompatActivity() {
             val place = itemView.findViewById<TextView>(R.id.entryPlaceTxt)
             val desc = itemView.findViewById<TextView>(R.id.entryListDescTxt)
 
-            val times = mItems[position].time.split(" ").toTypedArray()
-            Log.d("Test", "${mItems.size}")
+            val times = mEntryEntries[groupPosition][childPosition].time.split(" ").toTypedArray()
             time.text = "${times[0]}"
             timeAdditional.text = "${times[1]}"
-            place.text = mItems[position].place
-            desc.text = mItems[position].moreInfo
+            place.text = mEntryEntries[groupPosition][childPosition].place
+            desc.text = mEntryEntries[groupPosition][childPosition].moreInfo
 
             return itemView
+        }
+
+        override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean {
+            return true
         }
     }
 }
