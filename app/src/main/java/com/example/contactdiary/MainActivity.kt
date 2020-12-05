@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
         val fabMe: View = findViewById(R.id.mainMeBtn)
         fabMe.setOnClickListener {
-            //startActivity(Intent(this, MeActivity::class.java))
+            startActivity(Intent(this, MeActivity::class.java))
         }
     }
 
@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 val adapter = MainExpandableListViewAdapter(applicationContext, days, entriesCompComp.toMutableList())
                 mainList = findViewById(R.id.mainList)
+                mainList.isClickable = false
                 mainList.setAdapter(adapter)
 
                 if(days.isNotEmpty()){
