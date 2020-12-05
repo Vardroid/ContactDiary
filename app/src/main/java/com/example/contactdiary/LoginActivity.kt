@@ -16,6 +16,8 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        supportActionBar?.title = "Login"
+
         findViewById<Button>(R.id.loginBtn).setOnClickListener {
             performLogin()
         }
@@ -45,7 +47,7 @@ class LoginActivity : AppCompatActivity() {
             }
             .addOnFailureListener { task ->
                 Log.d("Login", "Login Failed: ${task.message}")
-                Toast.makeText(applicationContext, "Login Failed.", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "Login Failed: ${task.message}", Toast.LENGTH_LONG).show()
             }
     }
 }

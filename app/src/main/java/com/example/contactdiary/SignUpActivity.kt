@@ -18,6 +18,8 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
+        supportActionBar?.title = "Sign Up"
+
         findViewById<Button>(R.id.signupBtn).setOnClickListener {
             performRegister()
         }

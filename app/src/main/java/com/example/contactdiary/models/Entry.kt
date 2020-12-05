@@ -1,8 +1,6 @@
 package com.example.contactdiary.models
 
-//import com.google.firebase.database.IgnoreExtraProperties
-//
-//@IgnoreExtraProperties
-class Entry (var id: String? = "", var name: String? = "", var link: String? = "", var reason: String? = "") {
-
+//Time format is ???
+class Entry (val uid: String, val time: String, val place: String, val moreInfo: String) {
+    constructor(): this("", "", "", "")
 }
