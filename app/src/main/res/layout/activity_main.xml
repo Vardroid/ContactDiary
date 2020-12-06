@@ -23,10 +23,10 @@
         android:id="@+id/mainList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:groupIndicator="@null"
         android:childDivider="#00000000"
-        android:paddingBottom="100dp"
         android:clipToPadding="false"
+        android:groupIndicator="@null"
+        android:paddingBottom="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -57,18 +57,21 @@
         app:backgroundTint="#80454545"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/calendar_icon" />
+        app:srcCompat="@android:drawable/ic_menu_today" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+
+
         android:id="@+id/mainMeBtn"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="49dp"
+        android:layout_height="51dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginRight="32dp"
         android:layout_marginBottom="16dp"
         android:clickable="true"
         app:backgroundTint="#80454545"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/me_icon" />
+        app:rippleColor="#FFFFFF"
+        app:srcCompat="@android:drawable/ic_menu_friendslist" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
