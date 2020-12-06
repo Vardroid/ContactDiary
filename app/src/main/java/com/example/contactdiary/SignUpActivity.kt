@@ -41,6 +41,7 @@ class SignUpActivity : AppCompatActivity() {
                     return@addOnCompleteListener
                 }else{
                     // else if successful
+                    Toast.makeText(applicationContext, "Successfully created user.", Toast.LENGTH_LONG).show()
                     Log.d("Signup", "Successfully created user with uid: ${task.result?.user?.uid}")
                     saveUserToFirebaseDatabase()
                 }

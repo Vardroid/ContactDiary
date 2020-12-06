@@ -19,6 +19,7 @@ import java.util.*
 
 class AddEntryActivity : AppCompatActivity() {
     var dateFormat = ""
+    var timeMilitary = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_entry)
@@ -48,8 +49,9 @@ class AddEntryActivity : AppCompatActivity() {
         entryDateTxt.setOnClickListener{
             val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
                 val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-                dateFormat = "" + (month+1) + " - " + dayOfMonth + " - " + year
-                entryDateTxt.setText(""+ months[month] + " " + dayOfMonth + ", " + year)
+                val dayOfMonthFormatted = String.format("%02d", dayOfMonth)
+                dateFormat = "" + (month+1) + " - " + dayOfMonthFormatted + " - " + year
+                entryDateTxt.setText(""+ months[month] + " " + dayOfMonthFormatted + ", " + year)
             }, year, month, day)
             dpd.show()
         }
@@ -63,13 +65,13 @@ class AddEntryActivity : AppCompatActivity() {
                     newHour = hourOfDay-12
                 }
                 val hourEdited = String.format("%02d", newHour)
+                val hourMilitaryEdited = String.format("%02d", hourOfDay)
                 val minuteEdited = String.format("%02d", minute)
+                timeMilitary = "$hourMilitaryEdited:$minuteEdited"
                 entryTimeTxt.setText("$hourEdited:$minuteEdited $additional")
             }, hour, minute, false)
             tpd.show()
         }
-
-
     }
 
     private fun saveEntryToFirebaseDatabase(){
@@ -83,7 +85,7 @@ class AddEntryActivity : AppCompatActivity() {
 
         var dateExist = false
         val refTest = FirebaseDatabase.getInstance().getReference("/users/$uid")
-        refTest.addValueEventListener(object : ValueEventListener {
+        refTest.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 snapshot.children.forEach {
                     if(it.key == entryDateTxt && it.hasChildren()){
@@ -101,27 +103,27 @@ class AddEntryActivity : AppCompatActivity() {
                             Toast.makeText(applicationContext, "Failed to add day to database: ${task.message}", Toast.LENGTH_LONG).show()
                         }
                 }
+
+                //create a random id for the entry
+                val uuid = timeMilitary
+                val newRef = FirebaseDatabase.getInstance().getReference("/users/$uid/$entryDateTxt/$uuid")
+
+                val entry = Entry(uuid, entryTimeTxt, entryPlaceTxt, entryDescTxt)
+
+                Log.d("AddEntry", "$uuid $entryTimeTxt $entryPlaceTxt $entryDescTxt $dateFormat $uuid")
+                newRef.setValue(entry)
+                        .addOnSuccessListener {
+                            Log.d("AddEntry", "Successfully added entry to database.")
+                            Toast.makeText(applicationContext, "Successfully added entry to database.", Toast.LENGTH_LONG).show()
+                        }
+                        .addOnFailureListener { task ->
+                            Log.d("AddEntry", "Failed to add entry to database: ${task.message}")
+                            Toast.makeText(applicationContext, "Failed to add entry to database: ${task.message}", Toast.LENGTH_LONG).show()
+                        }
             }
             override fun onCancelled(error: DatabaseError) {
                 TODO("Not yet implemented")
             }
         })
-
-
-
-        val uuid = UUID.randomUUID().toString()
-        val newRef = FirebaseDatabase.getInstance().getReference("/users/$uid/$entryDateTxt/$uuid")
-
-        val entry = Entry(uuid, entryTimeTxt, entryPlaceTxt, entryDescTxt)
-
-        newRef.setValue(entry)
-            .addOnSuccessListener {
-                Log.d("AddEntry", "Successfully added entry to database.")
-                Toast.makeText(applicationContext, "Successfully added entry to database.", Toast.LENGTH_LONG).show()
-            }
-            .addOnFailureListener { task ->
-                Log.d("AddEntry", "Failed to add entry to database: ${task.message}")
-                Toast.makeText(applicationContext, "Failed to add entry to database: ${task.message}", Toast.LENGTH_LONG).show()
-            }
     }
 }

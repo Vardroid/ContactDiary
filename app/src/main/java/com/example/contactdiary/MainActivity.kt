@@ -1,12 +1,14 @@
 package com.example.contactdiary
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import com.example.contactdiary.models.Day
 import com.example.contactdiary.models.Entry
 import com.google.firebase.auth.FirebaseAuth
@@ -23,6 +25,11 @@ class MainActivity : AppCompatActivity() {
     lateinit var entriesComp: MutableList<Entry>
     lateinit var entriesCompComp: MutableList<MutableList<Entry>>
 
+    lateinit var entriesId: MutableList<String>
+    lateinit var daysId: MutableList<String>
+
+    lateinit var entriesAndDaysId: MutableList<MutableList<String>>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -33,6 +40,9 @@ class MainActivity : AppCompatActivity() {
         days = ArrayList()
         entriesComp = ArrayList()
         entriesCompComp = ArrayList()
+        entriesId = ArrayList()
+        daysId = ArrayList()
+        entriesAndDaysId = ArrayList()
         fetchDays()
 
         val fabAdd: View = findViewById(R.id.mainAddBtn)
@@ -63,6 +73,7 @@ class MainActivity : AppCompatActivity() {
                     if(it.hasChildren()){ //if it is the day path
                         val date = it.getValue(Day::class.java)
                         days.add(date!!)
+                        daysId.add(it.key.toString())
 
                         //go to child to check for entries
                         entriesComp.clear()
@@ -70,16 +81,20 @@ class MainActivity : AppCompatActivity() {
                             if(twoit.hasChildren()){ //if it is an entry path
                                 val entry = twoit.getValue(Entry::class.java)
                                 entriesComp.add(entry!!)
+                                entriesId.add(twoit.key.toString())
                             }
                         }
                         Log.d("Test", "${entriesComp.size}")
+                        entriesAndDaysId.add(entriesId)
                         entriesCompComp.add(entriesComp.toMutableList())
                     }
                 }
+                daysId = daysId.toMutableList()
                 val adapter = MainExpandableListViewAdapter(applicationContext, days, entriesCompComp.toMutableList())
                 mainList = findViewById(R.id.mainList)
                 mainList.isClickable = false
                 mainList.setAdapter(adapter)
+                registerForContextMenu(mainList)
 
                 if(days.isNotEmpty()){
                     findViewById<TextView>(R.id.mainListPlaceholderTxt).visibility = View.INVISIBLE
@@ -197,6 +212,66 @@ class MainActivity : AppCompatActivity() {
 
         override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean {
             return true
+        }
+    }
+
+    //CONTEXT MENU
+    //
+    //Create Context Menu when you long press an item in the song list
+    override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        val inflater = menuInflater
+
+        //Add the menu items for the context menu
+        inflater.inflate(R.menu.entry_item_menu, menu)
+    }
+
+    //Method when a context item is selected
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        val info = item.menuInfo as ExpandableListView.ExpandableListContextMenuInfo
+        return when (item.itemId){
+            R.id.edit_entry -> {
+                //get the id of the entry and day that was selected
+                val dayPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition)
+                val entryPosition = ExpandableListView.getPackedPositionChild(info.packedPosition)
+
+                //put it in an extra
+                val intent = Intent(applicationContext, EditEntryActivity::class.java)
+
+                Log.d("Test", "${entriesAndDaysId[dayPosition][entryPosition]}")
+                intent.putExtra("dayId", daysId[dayPosition])
+                intent.putExtra("entryId", entriesAndDaysId[dayPosition][entryPosition])
+
+                //start activity
+                startActivity(intent)
+                true
+            }
+            R.id.delete_entry -> {
+                val dialogBuilder = AlertDialog.Builder(this)
+                dialogBuilder.setMessage("Do you want to delete this entry?")
+                    .setCancelable(false)
+                    .setPositiveButton("Yes", DialogInterface.OnClickListener{
+                            _, _ ->
+                        val dayPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition)
+                        val entryPosition = ExpandableListView.getPackedPositionChild(info.packedPosition)
+
+                        val uid = FirebaseAuth.getInstance().uid ?: ""
+                        val userRef = FirebaseDatabase.getInstance().getReference("users/$uid/${daysId[dayPosition]}")
+                        Log.d("Test", "${entriesAndDaysId[dayPosition][entryPosition]}")
+                        userRef.child("${entriesAndDaysId[dayPosition][entryPosition]}").removeValue()
+                        Toast.makeText(applicationContext, "Entry Deleted.", Toast.LENGTH_LONG).show()
+                    })
+                    .setNegativeButton("No", DialogInterface.OnClickListener{
+                            dialog, _ ->
+                        dialog.cancel()
+                    })
+
+                val alert = dialogBuilder.create()
+                alert.setTitle("Delete Entry")
+                alert.show()
+                true
+            }
+            else -> super.onContextItemSelected(item)
         }
     }
 }
