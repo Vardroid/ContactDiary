@@ -1,5 +1,6 @@
 package com.example.contactdiary
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -44,6 +45,9 @@ class SignUpActivity : AppCompatActivity() {
                     Toast.makeText(applicationContext, "Successfully created user.", Toast.LENGTH_LONG).show()
                     Log.d("Signup", "Successfully created user with uid: ${task.result?.user?.uid}")
                     saveUserToFirebaseDatabase()
+                    val intent = Intent(applicationContext, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
                 }
             }
             .addOnFailureListener { task ->

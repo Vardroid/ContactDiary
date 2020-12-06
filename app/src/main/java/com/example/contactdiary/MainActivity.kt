@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.Fragment
 import com.example.contactdiary.models.Day
 import com.example.contactdiary.models.Entry
 import com.google.firebase.auth.FirebaseAuth
@@ -26,8 +27,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var entriesCompComp: MutableList<MutableList<Entry>>
 
     lateinit var entriesId: MutableList<String>
-    lateinit var daysId: MutableList<String>
 
+    lateinit var daysId: MutableList<String>
     lateinit var entriesAndDaysId: MutableList<MutableList<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         userRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 days.clear()
+                daysId.clear()
                 snapshot.children.forEach { it ->
                     if(it.hasChildren()){ //if it is the day path
                         val date = it.getValue(Day::class.java)
@@ -77,6 +79,7 @@ class MainActivity : AppCompatActivity() {
 
                         //go to child to check for entries
                         entriesComp.clear()
+                        entriesId.clear()
                         it.children.forEach{ twoit ->
                             if(twoit.hasChildren()){ //if it is an entry path
                                 val entry = twoit.getValue(Entry::class.java)
@@ -85,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         Log.d("Test", "${entriesComp.size}")
-                        entriesAndDaysId.add(entriesId)
+                        entriesAndDaysId.add(entriesId.toMutableList())
                         entriesCompComp.add(entriesComp.toMutableList())
                     }
                 }
@@ -184,9 +187,9 @@ class MainActivity : AppCompatActivity() {
             val date = itemView.findViewById<TextView>(R.id.mainListDateTxt)
             val dates = mItems[groupPosition].date.split(" - ").toTypedArray()
             val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-            val m = months[dates[0].toInt()-1]
+            val m = months[dates[1].toInt()-1]
 
-            date.text = "$m ${dates[1]}, ${dates[2]}"
+            date.text = "$m ${dates[2]}, ${dates[0]}"
             //Log.d("Test", "entryEntries size: ${entryEntries[groupPosition].size} $groupPosition")
 
             return itemView
@@ -217,13 +220,18 @@ class MainActivity : AppCompatActivity() {
 
     //CONTEXT MENU
     //
-    //Create Context Menu when you long press an item in the song list
+    //Create Context Menu when you long press an item in the entry list
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
         val inflater = menuInflater
 
-        //Add the menu items for the context menu
-        inflater.inflate(R.menu.entry_item_menu, menu)
+        val info = menuInfo as ExpandableListView.ExpandableListContextMenuInfo
+        val type = ExpandableListView.getPackedPositionType(info.packedPosition)
+        if(type != ExpandableListView.PACKED_POSITION_TYPE_GROUP){
+            //Add the menu items for the context menu
+            inflater.inflate(R.menu.entry_item_menu, menu)
+        }
+
     }
 
     //Method when a context item is selected
@@ -237,8 +245,7 @@ class MainActivity : AppCompatActivity() {
 
                 //put it in an extra
                 val intent = Intent(applicationContext, EditEntryActivity::class.java)
-
-                Log.d("Test", "${entriesAndDaysId[dayPosition][entryPosition]}")
+                Log.d("MainActivity", "edit entry $dayPosition $entryPosition")
                 intent.putExtra("dayId", daysId[dayPosition])
                 intent.putExtra("entryId", entriesAndDaysId[dayPosition][entryPosition])
 
@@ -257,9 +264,18 @@ class MainActivity : AppCompatActivity() {
 
                         val uid = FirebaseAuth.getInstance().uid ?: ""
                         val userRef = FirebaseDatabase.getInstance().getReference("users/$uid/${daysId[dayPosition]}")
-                        Log.d("Test", "${entriesAndDaysId[dayPosition][entryPosition]}")
-                        userRef.child("${entriesAndDaysId[dayPosition][entryPosition]}").removeValue()
-                        Toast.makeText(applicationContext, "Entry Deleted.", Toast.LENGTH_LONG).show()
+
+                        if(entriesAndDaysId[dayPosition].size == 1){
+                            userRef.removeValue()
+                        }else{
+                            val newRef = FirebaseDatabase.getInstance().getReference("users/$uid/${daysId[dayPosition]}/${entriesAndDaysId[dayPosition][entryPosition]}")
+                            newRef.removeValue()
+
+                            Toast.makeText(applicationContext, "Entry Deleted.", Toast.LENGTH_LONG).show()
+
+                            val intent = Intent(applicationContext, MainActivity::class.java)
+                            startActivity(intent)
+                        }
                     })
                     .setNegativeButton("No", DialogInterface.OnClickListener{
                             dialog, _ ->

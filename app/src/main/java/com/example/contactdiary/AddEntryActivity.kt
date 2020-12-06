@@ -2,6 +2,7 @@ package com.example.contactdiary
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -43,6 +44,9 @@ class AddEntryActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "Please pick a date and time.", Toast.LENGTH_LONG).show()
             }else{
                 saveEntryToFirebaseDatabase()
+                val intent = Intent(applicationContext, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
             }
         }
 
@@ -50,7 +54,8 @@ class AddEntryActivity : AppCompatActivity() {
             val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
                 val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
                 val dayOfMonthFormatted = String.format("%02d", dayOfMonth)
-                dateFormat = "" + (month+1) + " - " + dayOfMonthFormatted + " - " + year
+                val monthsFormatted = String.format("%02d", (month+1))
+                dateFormat = "$year - $monthsFormatted - $dayOfMonthFormatted"
                 entryDateTxt.setText(""+ months[month] + " " + dayOfMonthFormatted + ", " + year)
             }, year, month, day)
             dpd.show()

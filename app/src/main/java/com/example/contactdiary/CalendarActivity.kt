@@ -35,8 +35,10 @@ class CalendarActivity : AppCompatActivity() {
         calendarList = findViewById(R.id.calendarList)
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val months = arrayOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-            dateFormat = "" + (month+1) + " - " + dayOfMonth + " - " + year
-            calendarDateTxt.text = ""+ months[month] + " " + dayOfMonth + ", " + year
+            val dayOfMonthFormatted = String.format("%02d", dayOfMonth)
+            val monthsFormatted = String.format("%02d", (month+1))
+            dateFormat = "$year - $monthsFormatted - $dayOfMonthFormatted"
+            calendarDateTxt.setText(""+ months[month] + " " + dayOfMonthFormatted + ", " + year)
 
             val uid = FirebaseAuth.getInstance().uid ?: ""
             val userRef = FirebaseDatabase.getInstance().getReference("users/$uid")

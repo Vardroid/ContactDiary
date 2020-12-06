@@ -1,10 +1,16 @@
 package com.example.contactdiary
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -22,7 +28,6 @@ class EditEntryActivity : AppCompatActivity() {
     lateinit var editEntryTimeTxt: TextView
     lateinit var editEntryDescTxt: TextView
     lateinit var entryEditBtn: Button
-    var dateFormat = ""
     var dayId = ""
     var entryId = ""
 
@@ -38,38 +43,28 @@ class EditEntryActivity : AppCompatActivity() {
 
         supportActionBar?.title = "Edit"
 
-        val c = Calendar.getInstance()
-        val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
-        val day = c.get(Calendar.DAY_OF_MONTH)
-
-        val hour = c.get(Calendar.HOUR)
-        val minute = c.get(Calendar.MINUTE)
-
         //get the id of the day and the entry
         dayId = intent.getStringExtra("dayId").toString()
         entryId = intent.getStringExtra("entryId").toString()
+        Log.d("EditEntryActivity", entryId)
 
         putValuesToFields(dayId, entryId)
 
         entryEditBtn.setOnClickListener {
             saveValuesToFirebaseDatabase()
+            val intent = Intent(applicationContext, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
         }
+    }
 
-        editEntryTimeTxt.setOnClickListener {
-            val tpd = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { _, hourOfDay, minute ->
-                var additional = "AM"
-                var newHour = hourOfDay
-                if(hourOfDay > 12){
-                    additional = "PM"
-                    newHour = hourOfDay-12
-                }
-                val hourEdited = String.format("%02d", newHour)
-                val minuteEdited = String.format("%02d", minute)
-                editEntryTimeTxt.setText("$hourEdited:$minuteEdited $additional")
-            }, hour, minute, false)
-            tpd.show()
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            val intent = Intent(applicationContext, MainActivity::class.java)
+            startActivity(intent)
+            return true
         }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun saveValuesToFirebaseDatabase(){
@@ -81,7 +76,7 @@ class EditEntryActivity : AppCompatActivity() {
         val ref = FirebaseDatabase.getInstance().getReference("/users/$uid/$dayId")
 
         val entry = Entry(entryId, entryTimeTxt, entryPlaceTxt, entryDescTxt)
-        ref.child("$entryId").setValue(entry)
+        ref.child(entryId).setValue(entry)
 
         Toast.makeText(applicationContext, "Entry Updated.", Toast.LENGTH_LONG).show()
     }
@@ -93,9 +88,9 @@ class EditEntryActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 editEntryDateTxt.text = snapshot.key.toString()
                 snapshot.children.forEach { it ->
-                    if(it.key.toString() == entryId){ //if true then it is an entry
+                    if(it.key.toString() == entryId){ //if true then it is the entry we're looking for
                         val entry = it.getValue(Entry::class.java)
-                        Log.d("Test", "${entry!!.time}")
+                        Log.d("Test", entry!!.time)
                         editEntryPlaceTxt.text = entry.place
                         editEntryTimeTxt.text = entry.time
                         editEntryDescTxt.text = entry.moreInfo
@@ -103,7 +98,6 @@ class EditEntryActivity : AppCompatActivity() {
                 }
             }
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
             }
         })
     }

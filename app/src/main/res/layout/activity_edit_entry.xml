@@ -38,7 +38,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Pick Time"
-        android:textColor="#0F0F0F"
+        android:textColor="#4A4A4A"
         android:textSize="18sp"
         app:layout_constraintStart_toEndOf="@+id/editEntryDateTxt"
         app:layout_constraintTop_toTopOf="parent" />
