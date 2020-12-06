@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:focusable="false"
     android:focusableInTouchMode="false"
+    android:background="@drawable/main_background"
     tools:context=".MainActivity">
 
     <TextView
@@ -56,7 +57,7 @@
         app:backgroundTint="#80454545"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_today" />
+        app:srcCompat="@drawable/calendar_icon" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/mainMeBtn"
@@ -69,5 +70,5 @@
         app:backgroundTint="#80454545"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_myplaces" />
+        app:srcCompat="@drawable/me_icon" />
 </androidx.constraintlayout.widget.ConstraintLayout>
