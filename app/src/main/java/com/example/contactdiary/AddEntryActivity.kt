@@ -22,6 +22,7 @@ class AddEntryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_entry)
+        supportActionBar?.title = "Add an Entry"
 
         val c = Calendar.getInstance()
         val year = c.get(Calendar.YEAR)
@@ -36,7 +37,13 @@ class AddEntryActivity : AppCompatActivity() {
 
         val saveEntryBtn = findViewById<Button>(R.id.entrySaveBtn)
 
-        saveEntryBtn.setOnClickListener { saveEntryToFirebaseDatabase() }
+        saveEntryBtn.setOnClickListener {
+            if(dateFormat == "" || findViewById<TextView>(R.id.entryTimePickerTxt).text.toString() == "Pick Time"){
+                Toast.makeText(applicationContext, "Please pick a date and time.", Toast.LENGTH_LONG).show()
+            }else{
+                saveEntryToFirebaseDatabase()
+            }
+        }
 
         entryDateTxt.setOnClickListener{
             val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->

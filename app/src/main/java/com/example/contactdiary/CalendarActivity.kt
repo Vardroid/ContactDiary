@@ -27,6 +27,7 @@ class CalendarActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calendar)
+        supportActionBar?.title = "Calendar"
 
         entries = ArrayList()
         calendarView = findViewById(R.id.calendarView)
